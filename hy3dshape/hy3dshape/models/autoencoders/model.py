@@ -30,6 +30,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import yaml
+from diffusers.models.modeling_outputs import AutoencoderKLOutput
 
 from .attention_blocks import FourierEmbedder, Transformer, CrossAttentionDecoder, PointCrossAttentionEncoder
 from .surface_extractors import MCSurfaceExtractor, SurfaceExtractors
@@ -321,17 +322,30 @@ class ShapeVAE(VectsetVAE):
         latents = self.transformer(latents)
         return latents
 
-    def encode(self, surface, sample_posterior=True):
+    # def encode(self, surface, sample_posterior=True):
+    #     pc, feats = surface[:, :, :3], surface[:, :, 3:]
+    #     latents, _ = self.encoder(pc, feats)
+    #     # print(latents.shape, self.pre_kl.weight.shape)
+    #     moments = self.pre_kl(latents)
+    #     posterior = DiagonalGaussianDistribution(moments, feat_dim=-1)
+    #     if sample_posterior:
+    #         latents = posterior.sample()
+    #     else:
+    #         latents = posterior.mode()
+    #     return latents
+
+    def encode(self, surface, num_tokens=None):
         pc, feats = surface[:, :, :3], surface[:, :, 3:]
         latents, _ = self.encoder(pc, feats)
         # print(latents.shape, self.pre_kl.weight.shape)
         moments = self.pre_kl(latents)
         posterior = DiagonalGaussianDistribution(moments, feat_dim=-1)
-        if sample_posterior:
-            latents = posterior.sample()
-        else:
-            latents = posterior.mode()
-        return latents
+
+        return AutoencoderKLOutput(latent_dist=posterior)
+        # if sample_posterior:
+        #     latents = posterior.sample()
+        # else:
+        #     latents = posterior.mode()
 
     def decode(self, latents):
         latents = self.post_kl(latents)

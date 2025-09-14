@@ -336,6 +336,10 @@ class ShapeVAE(VectsetVAE):
 
     def encode(self, surface, num_tokens=None):
         pc, feats = surface[:, :, :3], surface[:, :, 3:]
+
+        if self.encoder.point_feats == 4 and feats.shape[-1] == 3:
+            feats = torch.cat([feats, torch.zeros_like(feats[..., :1])], dim=-1)
+        
         latents, _ = self.encoder(pc, feats)
         # print(latents.shape, self.pre_kl.weight.shape)
         moments = self.pre_kl(latents)

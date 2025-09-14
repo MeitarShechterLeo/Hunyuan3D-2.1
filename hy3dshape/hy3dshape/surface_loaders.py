@@ -147,6 +147,7 @@ def load_surface_sharpegde(mesh, num_points=4096, num_sharp_points=4096, sharped
     except Exception as err:
         mesh_full = trimesh.util.concatenate(mesh)
     mesh_full = normalize_mesh(mesh_full)
+    # mesh_full = normalize_mesh(mesh_full)
 
     origin_num = mesh_full.faces.shape[0]
     original_vertices = mesh_full.vertices

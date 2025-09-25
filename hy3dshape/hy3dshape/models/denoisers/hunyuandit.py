@@ -270,7 +270,7 @@ class Attention(nn.Module):
         self.k_norm = norm_layer(self.head_dim, elementwise_affine=True, eps=1e-6) if qk_norm else nn.Identity()
         self.out_proj = nn.Linear(dim, dim)
 
-    def forward(self, x):
+    def forward(self, x, attention_mask=None):
         B, N, C = x.shape
 
         q = self.to_q(x)
@@ -294,7 +294,7 @@ class Attention(nn.Module):
             enable_math=False,
             enable_mem_efficient=True
         ):
-            x = F.scaled_dot_product_attention(q, k, v)
+            x = F.scaled_dot_product_attention(q, k, v, attn_mask=attention_mask)
             x = x.transpose(1, 2).reshape(B, N, -1)
 
         x = self.out_proj(x)
@@ -375,7 +375,7 @@ class HunYuanDiTBlock(nn.Module):
         else:
             self.mlp = MLP(width=hidden_size)
 
-    def forward(self, x, c=None, text_states=None, skip_value=None):
+    def forward(self, x, c=None, text_states=None, skip_value=None, attention_mask=None):
 
         if self.skip_linear is not None:
             cat = torch.cat([skip_value, x], dim=-1)
@@ -387,7 +387,7 @@ class HunYuanDiTBlock(nn.Module):
             shift_msa = self.default_modulation(c).unsqueeze(dim=1)
             x = x + shift_msa
 
-        attn_out = self.attn1(self.norm1(x))
+        attn_out = self.attn1(self.norm1(x), attention_mask=attention_mask)
 
         x = x + attn_out
 

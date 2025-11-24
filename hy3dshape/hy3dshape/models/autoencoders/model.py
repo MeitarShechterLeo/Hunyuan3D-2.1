@@ -355,3 +355,6 @@ class ShapeVAE(VectsetVAE):
         latents = self.post_kl(latents)
         latents = self.transformer(latents)
         return latents
+
+    def set_flash_decoder(self):
+        return
